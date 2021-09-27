@@ -30,6 +30,7 @@ class Match(object):
         match_attributes=None,
         reset=True,
         seed=None,
+        multiplicative=False
     ):
         """
         Parameters
@@ -91,6 +92,8 @@ class Match(object):
 
         self.players = list(players)
         self.reset = reset
+
+        self.multiplicative = multiplicative
 
     def set_seed(self, seed):
         """Sets a random seed for the Match, for reproducibility. Initializes
@@ -211,15 +214,24 @@ class Match(object):
 
     def final_score(self):
         """Returns the final score for a Match."""
-        return iu.compute_final_score(self.result, self.game)
+        if self.multiplicative:
+            return iu.compute_multiplicative_score(self.result, self.game)
+        else:
+            return iu.compute_final_score(self.result, self.game)
 
     def final_score_per_turn(self):
         """Returns the mean score per round for a Match."""
-        return iu.compute_final_score_per_turn(self.result, self.game)
+        if self.multiplicative:
+            return iu.compute_multiplicative_score_per_turn(self.result, self.game)
+        else:
+            return iu.compute_final_score_per_turn(self.result, self.game)
 
     def winner(self):
         """Returns the winner of the Match."""
-        winner_index = iu.compute_winner_index(self.result, self.game)
+        if self.multiplicative:
+            winner_index = iu.compute_multiplicative_winner_index(self.result, self.game)
+        else:
+            winner_index = iu.compute_winner_index(self.result, self.game)
         if winner_index is False:  # No winner
             return False
         if winner_index is None:  # No plays
@@ -251,7 +263,6 @@ class Match(object):
 
     def __len__(self):
         return self.turns
-
 
 def sample_length(prob_end, random_value):
     """

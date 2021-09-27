@@ -8,6 +8,8 @@ This is used by both the Match class and the ResultSet class which analyse
 interactions.
 """
 from collections import Counter, defaultdict
+from numpy import prod
+from scipy.stats.mstats import gmean
 
 import pandas as pd
 import tqdm
@@ -37,6 +39,18 @@ def compute_final_score(interactions, game=None):
     )
     return final_score
 
+def compute_multiplicative_score(interactions, game=None):
+    """Returns the final score of a given set of interactions."""
+    scores = compute_scores(interactions, game)
+    if len(scores) == 0:
+        return None
+
+    final_score = tuple(
+        prod([score[player_index] for score in scores])
+        for player_index in [0, 1]
+    )
+    return final_score
+
 
 def compute_final_score_per_turn(interactions, game=None):
     """Returns the mean score per round for a set of interactions"""
@@ -52,6 +66,20 @@ def compute_final_score_per_turn(interactions, game=None):
     )
     return final_score_per_turn
 
+def compute_multiplicative_score_per_turn(interactions, game=None):
+    """Returns the mean score per round for a set of interactions"""
+    scores = compute_scores(interactions, game)
+    num_turns = len(interactions)
+
+    if len(scores) == 0:
+        return None
+
+    final_score_per_turn = tuple(
+        gmean([score[player_index] for score in scores])
+        for player_index in [0, 1]
+    )
+    return final_score_per_turn
+
 
 def compute_winner_index(interactions, game=None):
     """Returns the index of the winner of the Match"""
@@ -63,6 +91,15 @@ def compute_winner_index(interactions, game=None):
         return max([0, 1], key=lambda i: scores[i])
     return None
 
+def compute_multiplicative_winner_index(interactions, game=None):
+    """Returns the index of the winner of the Match"""
+    scores = compute_multiplicative_score(interactions, game)
+
+    if scores is not None:
+        if scores[0] == scores[1]:
+            return False  # No winner
+        return max([0, 1], key=lambda i: scores[i])
+    return None
 
 def compute_cooperations(interactions):
     """Returns the count of cooperations by each player for a set of

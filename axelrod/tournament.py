@@ -34,6 +34,7 @@ class Tournament(object):
         edges: List[Tuple] = None,
         match_attributes: dict = None,
         seed: int = None,
+        multiplicative: bool = False
     ) -> None:
         """
         Parameters
@@ -73,6 +74,7 @@ class Tournament(object):
         self.repetitions = repetitions
         self.edges = edges
         self.seed = seed
+        self.multiplicative = multiplicative
 
         if turns is None and prob_end is None:
             turns = DEFAULT_TURNS
@@ -451,6 +453,7 @@ class Tournament(object):
         player2 = self.players[p2_index].clone()
         match_params["players"] = (player1, player2)
         match_params["seed"] = seed
+        match_params["multiplicative"] = self.multiplicative
         match = Match(**match_params)
         for _ in range(repetitions):
             match.play()
@@ -466,42 +469,81 @@ class Tournament(object):
     def _calculate_results(self, interactions):
         results = []
 
-        scores = iu.compute_final_score(interactions, self.game)
-        results.append(scores)
+        if self.multiplicative:
+            scores = iu.compute_multiplicative_score(interactions, self.game)
+            results.append(scores)
 
-        score_diffs = scores[0] - scores[1], scores[1] - scores[0]
-        results.append(score_diffs)
+            score_diffs = scores[0] - scores[1], scores[1] - scores[0]
+            results.append(score_diffs)
 
-        turns = len(interactions)
-        results.append(turns)
+            turns = len(interactions)
+            results.append(turns)
 
-        score_per_turns = iu.compute_final_score_per_turn(
-            interactions, self.game
-        )
-        results.append(score_per_turns)
+            score_per_turns = iu.compute_multiplicative_score_per_turn(
+                interactions, self.game
+            )
+            results.append(score_per_turns)
 
-        score_diffs_per_turns = score_diffs[0] / turns, score_diffs[1] / turns
-        results.append(score_diffs_per_turns)
+            score_diffs_per_turns = score_diffs[0] / turns, score_diffs[1] / turns
+            results.append(score_diffs_per_turns)
 
-        initial_coops = tuple(
-            map(bool, iu.compute_cooperations(interactions[:1]))
-        )
-        results.append(initial_coops)
+            initial_coops = tuple(
+                map(bool, iu.compute_cooperations(interactions[:1]))
+            )
+            results.append(initial_coops)
 
-        cooperations = iu.compute_cooperations(interactions)
-        results.append(cooperations)
+            cooperations = iu.compute_cooperations(interactions)
+            results.append(cooperations)
 
-        state_distribution = iu.compute_state_distribution(interactions)
-        results.append(state_distribution)
+            state_distribution = iu.compute_state_distribution(interactions)
+            results.append(state_distribution)
 
-        state_to_action_distributions = iu.compute_state_to_action_distribution(
-            interactions
-        )
-        results.append(state_to_action_distributions)
+            state_to_action_distributions = iu.compute_state_to_action_distribution(
+                interactions
+            )
+            results.append(state_to_action_distributions)
 
-        winner_index = iu.compute_winner_index(interactions, self.game)
-        results.append(winner_index)
+            winner_index = iu.compute_multiplicative_winner_index(interactions, self.game)
+            results.append(winner_index)
 
+        else:
+            scores = iu.compute_final_score(interactions, self.game)
+            results.append(scores)
+            
+            score_diffs = scores[0] - scores[1], scores[1] - scores[0]
+            results.append(score_diffs)
+
+            turns = len(interactions)
+            results.append(turns)
+
+            score_per_turns = iu.compute_final_score_per_turn(
+                interactions, self.game
+            )
+            results.append(score_per_turns)
+
+            score_diffs_per_turns = score_diffs[0] / turns, score_diffs[1] / turns
+            results.append(score_diffs_per_turns)
+
+            initial_coops = tuple(
+                map(bool, iu.compute_cooperations(interactions[:1]))
+            )
+            results.append(initial_coops)
+
+            cooperations = iu.compute_cooperations(interactions)
+            results.append(cooperations)
+
+            state_distribution = iu.compute_state_distribution(interactions)
+            results.append(state_distribution)
+
+            state_to_action_distributions = iu.compute_state_to_action_distribution(
+                interactions
+            )
+            results.append(state_to_action_distributions)
+
+            winner_index = iu.compute_winner_index(interactions, self.game)
+            results.append(winner_index)
+
+        
         return results
 
 
