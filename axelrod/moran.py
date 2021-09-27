@@ -29,6 +29,7 @@ class MoranProcess(object):
         mutation_method="transition",
         stop_on_fixation=True,
         seed=None,
+        multiplicative=False
     ) -> None:
         """
         An agent based Moran process class. In each round, each player plays a
@@ -119,6 +120,7 @@ class MoranProcess(object):
         self._random = RandomGenerator(seed=seed)
         self._bulk_random = BulkRandomGenerator(self._random.random_seed_int())
         self.set_players()
+        self.multiplicative = multiplicative
         # Build the set of mutation targets
         # Determine the number of unique types (players)
         keys = set([str(p) for p in players])
@@ -384,6 +386,7 @@ class MoranProcess(object):
                 game=self.game,
                 deterministic_cache=self.deterministic_cache,
                 seed=next(self._bulk_random),
+                multiplicative=self.multiplicative
             )
             match.play()
             match_scores = match.final_score_per_turn()
